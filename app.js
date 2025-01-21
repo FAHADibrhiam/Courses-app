@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
-
+const myusers = require('../Courses-app/model/StudentSchema')
+const myuers = require('../Courses-app/model/InstructorSchema')
+const myuser = require('../Courses-app/model/CoursesSchema')
 
 require("dotenv").config();
 
