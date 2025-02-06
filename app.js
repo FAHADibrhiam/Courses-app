@@ -1,23 +1,18 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const myusers = require('../Courses-app/model/StudentSchema')
-const myuers = require('../Courses-app/model/InstructorSchema')
-const myuser = require('../Courses-app/model/CoursesSchema')
-
 require("dotenv").config();
-
 app.use(express.json());
 
-const mongoose = require('mongoose');
-const url = process.env.ULR_DATABASE;
-mongoose.connect(url).then(()=>{
-    console.log("Connected!");
+// الاتصال بقاعدة البيانات
+const mongoose = require("mongoose");
+const url = process.env.URL_DATABASE;
+  .connect(url)
+  .then(() => console.log("Connected DataBase!"))
+  .catch((error) => console.log("error: ", error));
+
+const RouterInstructor = require("./router/Instructor.Router");
+app.use("/api/Instructor", RouterInstructor);
+
+app.listen(process.env.PORT, () => {
+  console.log("Connected Server!");
 });
-
-
-
-app.listen(3000,()=>{
-    console.log("Connected Server !");
-})
-
-
