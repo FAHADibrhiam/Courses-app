@@ -1,9 +1,6 @@
 const mongoose = require("mongoose");
 
 const InstructorSchema = new mongoose.Schema({
-    last_name:{
-    },
-    Courses_Created:{
   FirstName: {
     type: String,
     require: true,

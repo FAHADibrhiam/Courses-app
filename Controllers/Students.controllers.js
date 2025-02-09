@@ -1,9 +1,8 @@
-const Instructor = require("../model/InstructorSchema");
 const Students = require("../model/StudentSchema");
+const Instructor = require("../model/InstructorSchema");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 
-// register
 const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -19,26 +18,25 @@ const register = async (req, res) => {
   // password Hashing
   const passwordHashing = await bcrypt.hash(password, 10);
   // Save the user to the database
-  const newUser = new Instructor({
+  const newUser = new Students({
     FirstName,
     LastName,
     email,
     password: passwordHashing,
-    role: "Instructor",
-    Courses_Created: null,
+    role: "Students",
+    Courses_Enrolled: null,
   });
   await newUser.save();
   res.json(newUser);
 };
 
-// Login
 const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(401).json(errors);
   }
   const { email, password } = req.body;
-  const user = await Instructor.findOne({ email: email });
+  const user = await Students.findOne({ email: email });
   if (!user) {
     return res.status(401).json("Email or password is incorrect");
   }
@@ -49,7 +47,6 @@ const login = async (req, res) => {
   res.status(201).json(user);
 };
 
-// Update Info Account
 const updateInfoAccount = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -57,11 +54,11 @@ const updateInfoAccount = async (req, res) => {
   }
   const UpdateInfo = req.params.UserID;
   try {
-    const user = await Instructor.findOne({ _id: UpdateInfo });
+    const user = await Students.findOne({ _id: UpdateInfo });
     if (!user) {
       return res.json("user is invalid");
     }
-    await Instructor.updateOne({ _id: UpdateInfo }, { $set: { ...req.body } });
+    await Students.updateOne({ _id: UpdateInfo }, { $set: { ...req.body } });
   } catch (error) {
     console.log(error);
     res.json("Try again");
@@ -69,15 +66,14 @@ const updateInfoAccount = async (req, res) => {
   res.json("done");
 };
 
-// DeleteAccount
 const DeleteAccount = async (req, res) => {
   const UserID = req.params.UserID;
   try {
-    const user = await Instructor.findOne({ _id: UserID });
+    const user = await Students.findOne({ _id: UserID });
     if (!user) {
       return res.json("user is invalid");
     }
-    await Instructor.deleteOne({ _id: UserID });
+    await Students.deleteOne({ _id: UserID });
   } catch (error) {
     console.log(error);
     res.json("Try again");
