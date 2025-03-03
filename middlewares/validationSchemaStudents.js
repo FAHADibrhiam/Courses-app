@@ -3,17 +3,17 @@ const { body } = require("express-validator");
 const validationSchemaRegisterStudents = () => {
   return [
     body("FirstName")
+      .trim()
       .notEmpty()
       .withMessage("The first name is required")
       .isString()
-      .trim()
       .isLength({ min: 3 })
       .withMessage("The first Name must be more than 3 characters long"),
     body("LastName")
+      .trim()
       .notEmpty()
       .withMessage("The last name is required")
       .isString()
-      .trim()
       .isLength({ min: 3 })
       .withMessage("The last Name must be more than 3 characters long"),
     body("email")
@@ -23,10 +23,10 @@ const validationSchemaRegisterStudents = () => {
       .isEmail()
       .withMessage("filed must be a valid email address"),
     body("password")
+      .trim()
       .notEmpty()
       .withMessage("the password is required")
       .isString()
-      .trim()
       .isLength({ min: 8 })
       .withMessage("The password must be more than 8 characters long")
       .matches(/[@#$]/)
@@ -37,9 +37,9 @@ const validationSchemaRegisterStudents = () => {
 const validationSchemaLoginStudents = () => {
   return [
     body("email")
+      .trim()
       .notEmpty()
       .withMessage("the email is required")
-      .trim()
       .isEmail()
       .withMessage("filed must be a valid email address"),
     body("password").notEmpty().withMessage("the password is required").trim(),
@@ -48,26 +48,26 @@ const validationSchemaLoginStudents = () => {
 const ValidationschemeupdateinfoStudents = () => {
   return [
     body("FirstName")
+      .trim()
       .optional()
       .isString()
-      .trim()
       .isLength({ min: 3 })
       .withMessage("The first Name must be more than 3 characters long"),
     body("LastName")
+      .trim()
       .optional()
       .isString()
-      .trim()
       .isLength({ min: 3 })
       .withMessage("The last Name must be more than 3 characters long"),
     body("email")
-      .optional()
       .trim()
+      .optional()
       .isEmail()
       .withMessage("filed must be a valid email address"),
     body("password")
+      .trim()
       .optional()
       .isString()
-      .trim()
       .isLength({ min: 8 })
       .withMessage("The password must be more than 8 characters long")
       .matches(/[@#$]/)

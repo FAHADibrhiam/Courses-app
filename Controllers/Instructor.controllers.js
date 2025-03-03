@@ -1,10 +1,12 @@
 const Instructor = require("../model/InstructorSchema");
 const Students = require("../model/StudentSchema");
+const Course = require("../model/CoursesSchema");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const httpStatusText = require("../utils/httpStatusText");
 const asyncWrapper = require("../middlewares/asyncWrapper");
 const AppError = require("../utils/AppError");
+const generateJWT = require("../utils/generateJWT");
 // register
 const register = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -32,15 +34,22 @@ const register = asyncWrapper(async (req, res, next) => {
   }
   // password Hashing
   const passwordHashing = await bcrypt.hash(password, 10);
-  // Save the user to the database
   const newUser = new Instructor({
     FirstName,
     LastName,
     email,
     password: passwordHashing,
     role: "Instructor",
-    Courses_Created: null,
   });
+
+  // generate json web token
+  const token = await generateJWT({
+    FirstName: FirstName,
+    LastName: LastName,
+    id: newUser._id,
+    role: newUser.role,
+  });
+  newUser.token = token;
   await newUser.save();
   res
     .status(201)
@@ -79,11 +88,19 @@ const login = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+  // generate json web token
+  const token = await generateJWT({
+    FirstName: user.FirstName,
+    LastName: user.LastName,
+    id: user._id,
+    role: user.role,
+  });
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { Login: `welcome ${user.FirstName} ${user.LastName}` },
+    data: { welcome: `${user.FirstName} ${user.LastName}`, token },
   });
 });
+
 // Update Info Account
 const updateInfoAccount = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -96,8 +113,8 @@ const updateInfoAccount = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  const UpdateInfo = req.params.UserID;
-  const user = await Instructor.findById(UpdateInfo);
+  const currentUserID = req.currentUser.id;
+  const user = await Instructor.findById(currentUserID);
   if (!user) {
     const error = AppError.create(
       null,
@@ -114,34 +131,39 @@ const updateInfoAccount = asyncWrapper(async (req, res, next) => {
   if (oldUser) {
     const error = AppError.create(
       null,
-      400,
+      404,
       httpStatusText.FAIL,
       "Email is invalid"
     );
     return next(error);
   }
-  await Instructor.updateOne({ _id: UpdateInfo }, { $set: { ...req.body } });
-
+  const NewInfo = await Instructor.updateOne(
+    { _id: currentUserID },
+    { $set: { ...req.body } }
+  );
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { updateInfoAccount: await Instructor.findById(UpdateInfo) },
+    data: { updateInfoAccount: NewInfo },
   });
 });
 // DeleteAccount
 const DeleteAccount = asyncWrapper(async (req, res, next) => {
-  const UserID = req.params.UserID;
-  const user = await Instructor.findById(UserID);
+  const currentUserID = req.currentUser.id;
+  const user = await Instructor.findById(currentUserID);
   if (!user) {
     const error = AppError.create(
       null,
-      400,
+      404,
       httpStatusText.FAIL,
       "user is invalid"
     );
     return next(error);
   }
+  await Instructor.deleteOne({ _id: currentUserID });
 
-  await Instructor.deleteOne({ _id: UserID });
+  await Course.deleteMany({
+    "CourseOriginator.id": currentUserID,
+  });
   res.status(201).json({ status: httpStatusText.SUCCESS, data: null });
 });
 module.exports = {

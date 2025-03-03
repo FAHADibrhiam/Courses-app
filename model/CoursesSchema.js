@@ -13,8 +13,8 @@ const CoursesSchema = new mongoose.Schema({
     type: Number,
     require: true,
   },
-  InstructorID: {
-    type: String,
+  CourseOriginator: {
+    type: Object,
     require: true,
   },
   StudentsEnrolled: {

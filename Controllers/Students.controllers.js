@@ -4,7 +4,8 @@ const { validationResult, body } = require("express-validator");
 const bcrypt = require("bcrypt");
 const httpStatusText = require("../utils/httpStatusText");
 const asyncWrapper = require("../middlewares/asyncWrapper");
-const AppError = require("../utils/AppError"); 
+const AppError = require("../utils/AppError");
+const generateJWT = require("../utils/generateJWT");
 // register
 const register = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -32,15 +33,21 @@ const register = asyncWrapper(async (req, res, next) => {
   }
   // password Hashing
   const passwordHashing = await bcrypt.hash(password, 10);
-  // Save the user to the database
   const newUser = new Students({
     FirstName,
     LastName,
     email,
     password: passwordHashing,
-    role: "Students",
-    Courses_Enrolled: null,
+    role: "Student",
   });
+  // generate json web token
+  const token = await generateJWT({
+    FirstName: FirstName,
+    LastName: LastName,
+    id: newUser._id,
+    role: newUser.role,
+  });
+  newUser.token = token;
   await newUser.save();
   res
     .status(201)
@@ -80,9 +87,16 @@ const login = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+  // generate json web token
+  const token = await generateJWT({
+    FirstName: user.FirstName,
+    LastName: user.LastName,
+    id: user._id,
+    role: user.role,
+  });
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { Login: `welcome ${user.FirstName} ${user.LastName}` },
+    data: { welcome: `${user.FirstName} ${user.LastName}`, token },
   });
 });
 
@@ -98,8 +112,9 @@ const updateInfoAccount = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  const UpdateInfo = req.params.UserID;
-  const user = await Students.findOne({ _id: UpdateInfo });
+
+  const currentUserID = req.currentUser.id;
+  const user = await Students.findOne({ _id: currentUserID });
   if (!user) {
     const error = AppError.create(
       null,
@@ -112,7 +127,6 @@ const updateInfoAccount = asyncWrapper(async (req, res, next) => {
   const oldUser =
     (await Students.findOne({ email: req.body.email })) ||
     (await Instructor.findOne({ email: req.body.email }));
-
   if (oldUser) {
     const error = AppError.create(
       null,
@@ -122,19 +136,20 @@ const updateInfoAccount = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  await Students.updateOne({ _id: UpdateInfo }, { $set: { ...req.body } });
-
+  const NewInfo = await Students.updateOne(
+    { _id: currentUserID },
+    { $set: { ...req.body } }
+  );
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { updateInfoAccount: await Students.findById(UpdateInfo) },
+    data: { updateInfoAccount: NewInfo },
   });
 });
 
 // DeleteAccount
 const DeleteAccount = asyncWrapper(async (req, res, next) => {
-  const UserID = req.params.UserID;
-
-  const user = await Students.findOne({ _id: UserID });
+  const currentUserID = req.currentUser.id;
+  const user = await Students.findOne({ _id: currentUserID });
   if (!user) {
     const error = AppError.create(
       null,
@@ -144,7 +159,7 @@ const DeleteAccount = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  await Students.deleteOne({ _id: UserID });
+  await Students.deleteOne({ _id: currentUserID });
   res.status(201).json({ status: httpStatusText.SUCCESS, data: null });
 });
 

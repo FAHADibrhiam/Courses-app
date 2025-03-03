@@ -25,6 +25,9 @@ const InstructorSchema = new mongoose.Schema({
   CoursesCreated: {
     type: Array,
   },
+  token: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("Instructor", InstructorSchema);

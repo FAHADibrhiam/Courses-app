@@ -2,23 +2,25 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const httpStatusText = require("./utils/httpStatusText");
-app.use(express.json());
 const cors = require("cors");
 
 // الاتصال بقاعدة البيانات
 const mongoose = require("mongoose");
-const url = process.env.URL_DATABASE;
+const UrlDatabase = process.env.URL_DATABASE;
 mongoose
-  .connect(url)
+  .connect(UrlDatabase)
   .then(() => console.log("Connected DataBase!"))
   .catch((error) => console.log("error: ", error));
 
+app.use(express.json());
 app.use(cors());
 
 const RouterInstructor = require("./router/Instructor.Router");
 const RouterStudents = require("./router/Students.Router");
+const RouterCourses = require("./router/Course.Router");
 app.use("/api/Instructor", RouterInstructor);
 app.use("/api/Students", RouterStudents);
+app.use("/api/course", RouterCourses);
 
 // global middleware for not found router
 app.all("*", (req, res) => {

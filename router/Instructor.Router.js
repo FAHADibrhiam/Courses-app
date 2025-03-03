@@ -6,6 +6,10 @@ const {
   validationSchemaLoginInstructor,
   ValidationschemeupdateinfoInstructor,
 } = require("../middlewares/validationSchemaInstructor");
+
+const verificationToken = require("../middlewares/verificationToken");
+const allowedTo = require("../middlewares/allowedTo");
+const usersRoles = require("../utils/usersRoles");
 router
   .post(
     "/register",
@@ -19,11 +23,18 @@ router
   );
 
 router.patch(
-  "/UpdateInfoUser/:UserID",
+  "/UpdateInfoUser/",
+  verificationToken,
+  allowedTo(usersRoles.Instructor),
   ValidationschemeupdateinfoInstructor(),
   InstructorControllers.updateInfoAccount
 );
 
-router.delete("/DeleteAccount/:UserID", InstructorControllers.DeleteAccount);
+router.delete(
+  "/DeleteAccount/",
+  verificationToken,
+  allowedTo(usersRoles.Instructor),
+  InstructorControllers.DeleteAccount
+);
 
 module.exports = router;
